@@ -7,16 +7,16 @@ interface ResultsProps {
 }
 
 export const Results: React.FC<ResultsProps> = ({ result, onNewAnalysis }) => {
-  const { mallampati, risk } = result;
+  const { mallampatiClass, riskLevel, confidence, recommendation, details } = result;
   
-  const getRiskColor = (level: 'low' | 'high') => {
-    return level === 'high' 
+  const getRiskColor = () => {
+    return riskLevel === 'high' 
       ? 'border-red-500 bg-red-50' 
       : 'border-green-500 bg-green-50';
   };
 
-  const getRiskIcon = (level: 'low' | 'high') => {
-    return level === 'high' ? (
+  const getRiskIcon = () => {
+    return riskLevel === 'high' ? (
       <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
       </svg>
@@ -36,20 +36,17 @@ export const Results: React.FC<ResultsProps> = ({ result, onNewAnalysis }) => {
   return (
     <div className="space-y-6">
       {/* リスクレベル表示 */}
-      <div className={`card border-l-4 ${getRiskColor(risk.level)}`}>
+      <div className={`card border-l-4 ${getRiskColor()}`}>
         <div className="flex items-start space-x-4">
           <div className="flex-shrink-0">
-            {getRiskIcon(risk.level)}
+            {getRiskIcon()}
           </div>
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {risk.level === 'high' ? '高リスク' : '低リスク'}
+              {riskLevel === 'high' ? '高リスク' : '低リスク'}
             </h2>
-            <p className="text-lg text-gray-700 mb-4">
-              {risk.recommendation}
-            </p>
-            <p className="text-gray-600">
-              {risk.details}
+            <p className="text-lg text-gray-700">
+              {recommendation}
             </p>
           </div>
         </div>
@@ -67,22 +64,32 @@ export const Results: React.FC<ResultsProps> = ({ result, onNewAnalysis }) => {
             <div className="flex items-center justify-between">
               <span className="text-gray-600">分類結果</span>
               <span className="text-2xl font-bold text-medical-600">
-                Class {mallampati.class}
+                Class {mallampatiClass}
               </span>
             </div>
             
             <div className="flex items-center justify-between">
               <span className="text-gray-600">信頼度</span>
-              <span className={`text-lg font-semibold ${getConfidenceColor(mallampati.confidence)}`}>
-                {(mallampati.confidence * 100).toFixed(1)}%
+              <span className={`text-lg font-semibold ${getConfidenceColor(confidence)}`}>
+                {(confidence * 100).toFixed(1)}%
               </span>
             </div>
             
-            <div className="border-t pt-4">
-              <p className="text-sm text-gray-600">
-                {mallampati.description}
-              </p>
-            </div>
+            {details && (
+              <div className="border-t pt-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  {details.reasoning}
+                </p>
+                {details.visibleStructures.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 mb-1">確認された構造:</p>
+                    <p className="text-xs text-gray-600">
+                      {details.visibleStructures.join('、')}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -93,7 +100,7 @@ export const Results: React.FC<ResultsProps> = ({ result, onNewAnalysis }) => {
           </h3>
           
           <div className="space-y-4">
-            {risk.level === 'high' ? (
+            {riskLevel === 'high' ? (
               <div className="space-y-3">
                 <div className="flex items-start space-x-3">
                   <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
@@ -169,8 +176,7 @@ export const Results: React.FC<ResultsProps> = ({ result, onNewAnalysis }) => {
 
       {/* 解析情報 */}
       <div className="text-center text-sm text-gray-500">
-        <p>解析日時: {new Date(result.timestamp).toLocaleString('ja-JP')}</p>
-        <p>解析ID: {result.imageId}</p>
+        <p>解析日時: {new Date().toLocaleString('ja-JP')}</p>
       </div>
     </div>
   );

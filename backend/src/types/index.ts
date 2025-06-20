@@ -13,10 +13,14 @@ export interface RiskAssessment {
 }
 
 export interface AnalysisResult {
-  mallampati: MallampatiClassification;
-  risk: RiskAssessment;
-  timestamp: string;
-  imageId: string;
+  mallampatiClass: number;
+  riskLevel: 'low' | 'high';
+  confidence: number;
+  recommendation: string;
+  details?: {
+    visibleStructures: string[];
+    reasoning: string;
+  };
 }
 
 export interface ApiResponse<T> {

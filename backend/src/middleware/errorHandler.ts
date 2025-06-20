@@ -4,8 +4,8 @@ export const errorHandler = (
   error: Error,
   req: Request,
   res: Response,
-  next: NextFunction
-) => {
+  _next: NextFunction
+): Response | void => {
   console.error('❌ Error occurred:', {
     message: error.message,
     stack: error.stack,
@@ -54,6 +54,6 @@ export const errorHandler = (
     success: false,
     error: 'サーバー内部エラーが発生しました。',
     code: 'INTERNAL_SERVER_ERROR',
-    ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    ...(process.env['NODE_ENV'] === 'development' && { details: error.message })
   });
 };

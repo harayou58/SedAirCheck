@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 
-export const validateImageFile = (req: Request, res: Response, next: NextFunction) => {
+export const validateImageFile = (req: Request, res: Response, next: NextFunction): Response | void => {
   if (!req.file) {
     return res.status(400).json({
       success: false,

@@ -7,9 +7,25 @@
       "config": {
         "distDir": "frontend/dist"
       }
+    },
+    {
+      "src": "api/*.ts",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
+    {
+      "src": "/health",
+      "dest": "/api/health"
+    },
+    {
+      "src": "/api/analyze",
+      "dest": "/api/analyze"
+    },
+    {
+      "src": "/api/test",
+      "dest": "/api/test"
+    },
     {
       "src": "/(.*)",
       "dest": "frontend/dist/$1"
@@ -17,5 +33,10 @@
   ],
   "buildCommand": "cd frontend && npm run build",
   "devCommand": "cd frontend && npm run dev",
-  "installCommand": "cd frontend && npm install"
+  "installCommand": "npm install && cd frontend && npm install",
+  "functions": {
+    "api/*.ts": {
+      "maxDuration": 30
+    }
+  }
 }
