@@ -1,7 +1,111 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import multer from 'multer';
 import sharp from 'sharp';
-import { getAnalysisService } from '../backend/src/services/analysisService';
+import OpenAI from 'openai';
+
+// Analysis function
+async function analyzeImage(openai: OpenAI, imageBase64: string, filename: string) {
+  const prompt = `You are an expert anesthesiologist evaluating Mallampati classification from this oral cavity photograph. This is critical for airway management assessment.
+
+CRITICAL INSTRUCTIONS:
+1. Look carefully at the ENTIRE visible oral cavity anatomy
+2. Focus on what structures are CLEARLY and COMPLETELY visible
+3. Be conservative in your assessment - when in doubt, choose the higher class
+
+DETAILED Mallampati Classification Criteria:
+
+CLASS I (Best airway):
+- COMPLETE visualization of: soft palate + FULL uvula + fauces + tonsillar pillars
+- All 4 structures must be clearly visible
+- Tonsillar pillars (anterior and posterior) should be distinctly visible on both sides
+
+CLASS II (Good airway):
+- Visible: soft palate + uvula + fauces
+- Tonsillar pillars are HIDDEN or only partially visible
+- Uvula should be completely visible
+
+CLASS III (Potentially difficult airway):
+- Visible: soft palate + only BASE/TIP of uvula
+- Fauces and tonsillar pillars are NOT visible
+- Only the lower portion of uvula is seen
+
+CLASS IV (Difficult airway):
+- ONLY hard palate visible
+- Soft palate completely hidden
+- No uvula, fauces, or pillars visible
+
+EVALUATION STEPS:
+1. Can you see tonsillar pillars clearly on BOTH sides? → If YES, likely Class I
+2. Is the ENTIRE uvula visible from base to tip? → If YES and no pillars, likely Class II
+3. Can you see only the base/tip of uvula? → If YES, likely Class III
+4. Can you see only hard palate? → If YES, Class IV
+
+Be especially careful to distinguish between Class I and Class II based on tonsillar pillar visibility.
+
+Respond with this exact JSON format:
+
+{
+  "mallampatiClass": 1,
+  "confidence": 0.85,
+  "visibleStructures": ["soft palate", "uvula", "fauces", "tonsillar pillars"],
+  "reasoning": "Detailed description of exactly what anatomical structures you can identify and why this leads to your classification"
+}`;
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: prompt,
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: `data:image/jpeg;base64,${imageBase64}`,
+            },
+          },
+        ],
+      },
+    ],
+    max_tokens: 500,
+    temperature: 0.1,
+  });
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error('No response from GPT-4 Vision API');
+  }
+
+  // Parse the JSON response
+  const jsonMatch = content.match(/\{[\s\S]*?\}/);
+  if (!jsonMatch) {
+    throw new Error('Invalid response format from GPT-4 Vision API');
+  }
+
+  const analysisData = JSON.parse(jsonMatch[0]);
+  
+  // Determine risk level based on Mallampati class
+  const riskLevel = analysisData.mallampatiClass <= 2 ? 'low' : 'high';
+  
+  // Generate recommendation
+  const recommendation = analysisData.mallampatiClass <= 2
+    ? `Low risk identified (Mallampati Class ${analysisData.mallampatiClass}). Standard intravenous sedation can be safely administered with routine monitoring.`
+    : `High risk identified (Mallampati Class ${analysisData.mallampatiClass}). Consider anesthesiologist consultation and prepare for potential difficult airway management. Alternative sedation methods or general anesthesia may be required.`;
+
+  return {
+    mallampatiClass: analysisData.mallampatiClass,
+    riskLevel,
+    confidence: analysisData.confidence,
+    recommendation,
+    details: {
+      visibleStructures: analysisData.visibleStructures,
+      reasoning: analysisData.reasoning,
+    },
+  };
+}
 
 // Multer setup for Vercel
 const upload = multer({
@@ -69,8 +173,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Base64 encode
     const imageBase64 = processedImageBuffer.toString('base64');
 
+    // Initialize OpenAI client
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
     // Analyze with GPT-4 Vision API
-    const analysisResult = await getAnalysisService().analyzeImage(imageBase64, file.originalname);
+    const analysisResult = await analyzeImage(openai, imageBase64, file.originalname);
 
     console.log(`✅ Analysis completed for ${file.originalname}`);
 

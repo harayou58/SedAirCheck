@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaMD開発のための現代的インフラ完全ガイド - Vercel × Docker × Supabase</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .tech-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .tech-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        .concept-box {
+            border-left: 4px solid #4F46E5;
+            background: linear-gradient(90deg, #F8FAFC 0%, #F1F5F9 100%);
+        }
+        .warning-box {
+            border-left: 4px solid #F59E0B;
+            background: linear-gradient(90deg, #FFFBEB 0%, #FEF3C7 100%);
+        }
+        .success-box {
+            border-left: 4px solid #10B981;
+            background: linear-gradient(90deg, #ECFDF5 0%, #D1FAE5 100%);
+        }
+        .code-block {
+            background: #1F2937;
+            color: #F9FAFB;
+            font-family: 'Courier New', monospace;
+        }
+        .flow-arrow {
+            font-size: 2rem;
+            color: #6366F1;
+        }
+        @media print {
+            .no-print { display: none; }
+            body { -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <!-- Header -->
+    <header class="gradient-bg text-white py-16">
+        <div class="container mx-auto px-6 text-center">
+            <h1 class="text-5xl font-bold mb-4">
+                <i class="fas fa-stethoscope mr-4"></i>
+                SaMD開発のための現代的インフラ完全ガイド
+            </h1>
+            <p class="text-xl opacity-90 max-w-3xl mx-auto">
+                Vercel × Docker × Supabaseを使った医療機器ソフトウェア開発の実践的教材
+            </p>
+            <div class="mt-8 flex justify-center space-x-8">
+                <div class="text-center">
+                    <i class="fab fa-docker text-4xl mb-2"></i>
+                    <p class="text-sm">Docker</p>
+                </div>
+                <div class="text-center">
+                    <i class="fas fa-server text-4xl mb-2"></i>
+                    <p class="text-sm">Supabase</p>
+                </div>
+                <div class="text-center">
+                    <i class="fas fa-cloud text-4xl mb-2"></i>
+                    <p class="text-sm">Vercel</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-6 py-12">
+        <!-- 目次 -->
+        <div class="bg-white rounded-lg card-shadow p-8 mb-12">
+            <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">
+                <i class="fas fa-list-ul mr-3"></i>目次
+            </h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold text-lg mb-3 text-indigo-600">基礎概念</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#samd-intro" class="hover:text-indigo-600">• SaMDとは</a></li>
+                        <li><a href="#architecture-overview" class="hover:text-indigo-600">• アーキテクチャ概要</a></li>
+                        <li><a href="#frontend-backend" class="hover:text-indigo-600">• フロントエンド・バックエンド</a></li>
+                        <li><a href="#build-deploy" class="hover:text-indigo-600">• ビルド・デプロイ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg mb-3 text-indigo-600">技術詳細</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#docker-concepts" class="hover:text-indigo-600">• Docker技術群</a></li>
+                        <li><a href="#supabase-ecosystem" class="hover:text-indigo-600">• Supabaseエコシステム</a></li>
+                        <li><a href="#deployment-flow" class="hover:text-indigo-600">• デプロイメントフロー</a></li>
+                        <li><a href="#glossary" class="hover:text-indigo-600">• 用語集</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SaMD Introduction -->
+        <section id="samd-intro" class="mb-16">
+            <div class="bg-white rounded-lg card-shadow p-8">
+                <h2 class="text-3xl font-bold mb-6 text-center">
+                    <i class="fas fa-heartbeat mr-3 text-red-500"></i>
+                    SaMD（Software as Medical Device）とは
+                </h2>
+                
+                <div class="concept-box p-6 rounded-lg mb-8">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                        SaMDの定義
+                    </h3>
+                    <p class="text-gray-700 leading-relaxed mb-4">
+                        SaMDは「医療機器としてのソフトウェア」を指します。従来のハードウェア医療機器とは異なり、
+                        ソフトウェア単体で医療目的を果たす製品です。診断支援、治療計画、患者モニタリングなど、
+                        医療現場で直接使用されるアプリケーションが該当します。
+                    </p>
+                    <div class="grid md:grid-cols-3 gap-4 mt-6">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <i class="fas fa-brain text-2xl text-blue-600 mb-2"></i>
+                            <p class="font-semibold">診断支援</p>
+                            <p class="text-sm text-gray-600">AI画像診断など</p>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <i class="fas fa-chart-line text-2xl text-green-600 mb-2"></i>
+                            <p class="font-semibold">モニタリング</p>
+                            <p class="text-sm text-gray-600">バイタルサイン監視</p>
+                        </div>
+                        <div class="text-center p-4 bg-purple-50 rounded-lg">
+                            <i class="fas fa-calculator text-2xl text-purple-600 mb-2"></i>
+                            <p class="font-semibold">治療計画</p>
+                            <p class="text-sm text-gray-600">投薬量計算など</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-box p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-exclamation-triangle mr-2 text-yellow-500"></i>
+                        SaMD開発の特殊性
+                    </h3>
+                    <ul class="space-y-2 text-gray-700">
+                        <li><i class="fas fa-shield-alt mr-2 text-yellow-500"></i>厳格な規制要件（薬機法、FDA等）</li>
+                        <li><i class="fas fa-lock mr-2 text-yellow-500"></i>高度なセキュリティ要件</li>
+                        <li><i class="fas fa-clipboard-check mr-2 text-yellow-500"></i>品質管理システム（QMS）の必要性</li>
+                        <li><i class="fas fa-archive mr-2 text-yellow-500"></i>長期的な保守・監査証跡</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Architecture Overview -->
+        <section id="architecture-overview" class="mb-16">
+            <div class="bg-white rounded-lg card-shadow p-8">
+                <h2 class="text-3xl font-bold mb-6 text-center">
+                    <i class="fas fa-sitemap mr-3 text-indigo-500"></i>
+                    システムアーキテクチャ概要
+                </h2>
+                
+                <div class="mb-8">
+                    <canvas id="architectureChart" style="height: 400px;"></canvas>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6 mb-8">
+                    <div class="tech-card bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg">
+                        <div class="text-center">
+                            <i class="fas fa-desktop text-4xl text-blue-600 mb-4"></i>
+                            <h3 class="text-xl font-bold text-blue-800 mb-2">フロントエンド</h3>
+                            <p class="text-blue-700 text-sm mb-4">ユーザーインターフェース</p>
+                            <div class="text-left">
+                                <p class="text-sm"><strong>技術:</strong> Vite + React/Vue</p>
+                                <p class="text-sm"><strong>ホスティング:</strong> Vercel</p>
+                                <p class="text-sm"><strong>配信:</strong> CDN</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tech-card bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg">
+                        <div class="text-center">
+                            <i class="fas fa-server text-4xl text-green-600 mb-4"></i>
+                            <h3 class="text-xl font-bold text-green-800 mb-2">バックエンド</h3>
+                            <p class="text-green-700 text-sm mb-4">APIサーバー・データベース</p>
+                            <div class="text-left">
+                                <p class="text-sm"><strong>技術:</strong> Supabase</p>
+                                <p class="text-sm"><strong>DB:</strong> PostgreSQL</p>
+                                <p class="text-sm"><strong>Functions:</strong> Edge Functions</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tech-card bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg">
+                        <div class="text-center">
+                            <i class="fab fa-docker text-4xl text-purple-600 mb-4"></i>
+                            <h3 class="text-xl font-bold text-purple-800 mb-2">コンテナ</h3>
+                            <p class="text-purple-700 text-sm mb-4">アプリケーション実行環境</p>
+                            <div class="text-left">
+                                <p class="text-sm"><strong>技術:</strong> Docker</p>
+                                <p class="text-sm"><strong>オーケストレーション:</strong> Docker Compose</p>
+                                <p class="text-sm"><strong>レジストリ:</strong> OCI準拠</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-route mr-2 text-indigo-500"></i>
+                        データフロー
+                    </h3>
+                    <div class="flex items-center justify-between text-center">
+                        <div class="flex-1">
+                            <i class="fas fa-user-md text-3xl text-blue-500 mb-2"></i>
+                            <p class="font-semibold">医療従事者</p>
+                            <p class="text-sm text-gray-600">ブラウザからアクセス</p>
+                        </div>
+                        <i class="fas fa-arrow-right flow-arrow"></i>
+                        <div class="flex-1">
+                            <i class="fas fa-cloud text-3xl text-green-500 mb-2"></i>
+                            <p class="font-semibold">Vercel CDN</p>
+                            <p class="text-sm text-gray-600">静的ファイル配信</p>
+                        </div>
+                        <i class="fas fa-arrow-right flow-arrow"></i>
+                        <div class="flex-1">
+                            <i class="fas fa-database text-3xl text-purple-500 mb-2"></i>
+                            <p class="font-semibold">Supabase</p>
+                            <p class="text-sm text-gray-600">API・データベース</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Frontend & Backend -->
+        <section id="frontend-backend" class="mb-16">
+            <div class="bg-white rounded-lg card-shadow p-8">
+                <h2 class="text-3xl font-bold mb-6 text-center">
+                    <i class="fas fa-code mr-3 text-blue-500"></i>
+                    フロントエンド・バックエンドの理解
+                </h2>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Frontend -->
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-2xl font-bold mb-4 text-blue-600">
+                            <i class="fas fa-desktop mr-2"></i>
+                            フロントエンド (Frontend)
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            ユーザーが直接操作する部分。ブラウザで動作するWebアプリケーションです。
+                            SaMDでは特に使いやすさと正確性が重要になります。
+                        </p>
+                        
+                        <h4 class="font-semibold mb-2 text-blue-500">
+                            <i class="fas fa-tools mr-1"></i>主要技術
+                        </h4>
+                        <ul class="space-y-2 mb-4">
+                            <li><strong>Vite:</strong> 高速なビルドツール</li>
+                            <li><strong>React/Vue:</strong> UIフレームワーク</li>
+                            <li><strong>TypeScript:</strong> 型安全性</li>
+                            <li><strong>Tailwind CSS:</strong> スタイリング</li>
+                        </ul>
+
+                        <div class="code-block p-4 rounded-lg">
+                            <p class="text-sm text-gray-300 mb-2">// 開発サーバー起動</p>
+                            <p class="text-green-400">npm run dev</p>
+                            <p class="text-sm text-gray-300 mt-2">// 本番用ビルド</p>
+                            <p class="text-green-400">npm run build</p>
+                        </div>
+                    </div>
+
+                    <!-- Backend -->
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-2xl font-bold mb-4 text-green-600">
+                            <i class="fas fa-server mr-2"></i>
+                            バックエンド (Backend)
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            データ処理やビジネスロジックを担当する部分。
+                            SaMDでは患者データの安全な管理と処理が最重要です。
+                        </p>
+                        
+                        <h4 class="font-semibold mb-2 text-green-500">
+                            <i class="fas fa-tools mr-1"></i>主要機能
+                        </h4>
+                        <ul class="space-y-2 mb-4">
+                            <li><strong>データベース:</strong> 患者データ管理</li>
+                            <li><strong>API:</strong> データ送受信</li>
+                            <li><strong>認証:</strong> アクセス制御</li>
+                            <li><strong>ビジネスロジック:</strong> 医療計算処理</li>
+                        </ul>
+
+                        <div class="code-block p-4 rounded-lg">
+                            <p class="text-sm text-gray-300 mb-2">// Supabase関数デプロイ</p>
+                            <p class="text-green-400">supabase functions deploy</p>
+                            <p class="text-sm text-gray-300 mt-2">// ローカル環境起動</p>
+                            <p class="text-green-400">supabase start</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 success-box p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-lightbulb mr-2 text-green-500"></i>
+                        SaMDにおける重要なポイント
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="font-semibold text-green-600 mb-2">フロントエンド</h4>
+                            <ul class="space-y-1 text-sm">
+                                <li>• 医療従事者向けの直感的UI</li>
+                                <li>• 入力値の厳密なバリデーション</li>
+                                <li>• アクセシビリティ対応</li>
+                                <li>• 高速なレスポンス</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-green-600 mb-2">バックエンド</h4>
+                            <ul class="space-y-1 text-sm">
+                                <li>• 患者データの暗号化</li>
+                                <li>• 監査ログの記録</li>
+                                <li>• 高可用性の確保</li>
+                                <li>• 規制要件への対応</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Docker Concepts -->
+        <section id="docker-concepts" class="mb-16">
+            <div class="bg-white rounded-lg card-shadow p-8">
+                <h2 class="text-3xl font-bold mb-6 text-center">
+                    <i class="fab fa-docker mr-3 text-blue-500"></i>
+                    Docker技術群の完全理解
+                </h2>
+
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-blue-600">
+                            <i class="fab fa-docker mr-2"></i>
+                            Docker
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            アプリケーションをコンテナという軽量な仮想環境で実行する技術。
+                            「どの環境でも同じように動く」を実現します。
+                        </p>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-blue-600 mb-2">利点</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 環境の統一性</li>
+                                <li>• 高速な起動</li>
+                                <li>• リソース効率</li>
+                                <li>• 移植性の高さ</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-purple-600">
+                            <i class="fas fa-file-code mr-2"></i>
+                            Dockerfile
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            Dockerイメージの作成手順を記述したテキストファイル。
+                            「レシピ」のような役割を持ちます。
+                        </p>
+                        <div class="code-block p-4 rounded-lg text-sm">
+                            <p class="text-gray-300"># Node.js環境を使用</p>
+                            <p class="text-yellow-400">FROM node:18-alpine</p>
+                            <p class="text-gray-300"># 作業ディレクトリ設定</p>
+                            <p class="text-yellow-400">WORKDIR /app</p>
+                            <p class="text-gray-300"># 依存関係をコピー</p>
+                            <p class="text-yellow-400">COPY package*.json ./</p>
+                            <p class="text-gray-300"># パッケージインストール</p>
+                            <p class="text-yellow-400">RUN npm install</p>
+                            <p class="text-gray-300"># アプリケーションコードをコピー</p>
+                            <p class="text-yellow-400">COPY . .</p>
+                            <p class="text-gray-300"># アプリケーション起動</p>
+                            <p class="text-yellow-400">CMD ["npm", "start"]</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-green-600">
+                            <i class="fas fa-cube mr-2"></i>
+                            Dockerイメージ
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            アプリケーションとその実行環境を含む「テンプレート」。
+                            読み取り専用で、コンテナの基となります。
+                        </p>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-green-600 mb-2">特徴</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 不変性（Immutable）</li>
+                                <li>• レイヤー構造</li>
+                                <li>• 共有可能</li>
+                                <li>• バージョン管理</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-red-600">
+                            <i class="fas fa-play mr-2"></i>
+                            Dockerコンテナ
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            Dockerイメージから作成される実行中のプロセス。
+                            アプリケーションが実際に動作する環境です。
+                        </p>
+                        <div class="bg-red-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-red-600 mb-2">特徴</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 軽量で高速起動</li>
+                                <li>• 分離された環境</li>
+                                <li>• 動的な状態</li>
+                                <li>• スケーラブル</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="concept-box p-6 rounded-lg mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-indigo-600">
+                        <i class="fas fa-layer-group mr-2"></i>
+                        Docker Compose
+                    </h3>
+                    <p class="text-gray-700 mb-4">
+                        複数のコンテナを組み合わせたアプリケーションを定義・実行するツール。
+                        YAMLファイルで構成を記述します。
+                    </p>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="code-block p-4 rounded-lg text-sm">
+                            <p class="text-gray-300 mb-2"># docker-compose.yml</p>
+                            <p class="text-yellow-400">version: '3.8'</p>
+                            <p class="text-yellow-400">services:</p>
+                            <p class="text-yellow-400">  app:</p>
+                            <p class="text-yellow-400">    build: .</p>
+                            <p class="text-yellow-400">    ports:</p>
+                            <p class="text-yellow-400">      - "3000:3000"</p>
+                            <p class="text-yellow-400">  db:</p>
+                            <p class="text-yellow-400">    image: postgres:15</p>
+                            <p class="text-yellow-400">    environment:</p>
+                            <p class="text-yellow-400">      POSTGRES_PASSWORD: secret</p>
+                        </div>
+                        <div class="bg-indigo-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-indigo-600 mb-2">利点</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 複数サービスの一括管理</li>
+                                <li>• ネットワーク自動設定</li>
+                                <li>• 開発環境の統一</li>
+                                <li>• 簡単なスケーリング</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-orange-600">
+                            <i class="fas fa-box mr-2"></i>
+                            OCIイメージ
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            Open Container Initiative準拠のコンテナイメージ標準。
+                            Docker以外のランタイムでも使用可能です。
+                        </p>
+                        <div class="bg-orange-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-orange-600 mb-2">特徴</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 標準化された仕様</li>
+                                <li>• 互換性の確保</li>
+                                <li>• エコシステムの拡張</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-teal-600">
+                            <i class="fas fa-warehouse mr-2"></i>
+                            Container Registry
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            Dockerイメージを保存・配布するためのサービス。
+                            Docker Hub、AWS ECR、GitHub Container Registryなど。
+                        </p>
+                        <div class="bg-teal-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-teal-600 mb-2">機能</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• イメージの保存・管理</li>
+                                <li>• バージョン管理</li>
+                                <li>• アクセス制御</li>
+                                <li>• 自動ビルド</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Supabase Ecosystem -->
+        <section id="supabase-ecosystem" class="mb-16">
+            <div class="bg-white rounded-lg card-shadow p-8">
+                <h2 class="text-3xl font-bold mb-6 text-center">
+                    <i class="fas fa-server mr-3 text-green-500"></i>
+                    Supabaseエコシステム
+                </h2>
+
+                <div class="concept-box p-6 rounded-lg mb-8">
+                    <h3 class="text-2xl font-bold mb-4 text-green-600">
+                        <i class="fas fa-database mr-2"></i>
+                        Supabase概要
+                    </h3>
+                    <p class="text-gray-700 mb-4">
+                        オープンソースのFirebase代替。PostgreSQLをベースとしたBaaS（Backend as a Service）プラットフォーム。
+                        SaMD開発に必要な機能を包括的に提供します。
+                    </p>
+                    <div class="grid md:grid-cols-4 gap-4 mt-6">
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <i class="fas fa-database text-2xl text-green-600 mb-2"></i>
+                            <p class="font-semibold text-sm">Database</p>
+                        </div>
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <i class="fas fa-shield-alt text-2xl text-blue-600 mb-2"></i>
+                            <p class="font-semibold text-sm">Auth</p>
+                        </div>
+                        <div class="text-center p-4 bg-purple-50 rounded-lg">
+                            <i class="fas fa-cloud text-2xl text-purple-600 mb-2"></i>
+                            <p class="font-semibold text-sm">Storage</p>
+                        </div>
+                        <div class="text-center p-4 bg-orange-50 rounded-lg">
+                            <i class="fas fa-code text-2xl text-orange-600 mb-2"></i>
+                            <p class="font-semibold text-sm">Functions</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-blue-600">
+                            <i class="fas fa-terminal mr-2"></i>
+                            Supabase CLI
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            Supabaseプロジェクトの管理・開発を行うコマンドラインツール。
+                            ローカル開発環境の構築からデプロイまで対応。
+                        </p>
+                        <div class="code-block p-4 rounded-lg text-sm mb-4">
+                            <p class="text-gray-300"># プロジェクト初期化</p>
+                            <p class="text-green-400">supabase init</p>
+                            <p class="text-gray-300"># ローカル環境起動</p>
+                            <p class="text-green-400">supabase start</p>
+                            <p class="text-gray-300"># マイグレーション実行</p>
+                            <p class="text-green-400">supabase db push</p>
+                            <p class="text-gray-300"># 関数デプロイ</p>
+                            <p class="text-green-400">supabase functions deploy</p>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-blue-600 mb-2">主要機能</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• プロジェクト管理</li>
+                                <li>• データベース操作</li>
+                                <li>• 関数の開発・デプロイ</li>
+                                <li>• ローカル開発環境</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-purple-600">
+                            <i class="fas fa-bolt mr-2"></i>
+                            Supabase Edge Functions
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            Deno上で動作するサーバーレス関数。
+                            カスタムAPIエンドポイントやビジネスロジックの実装に使用。
+                        </p>
+                        <div class="code-block p-4 rounded-lg text-sm mb-4">
+                            <p class="text-gray-300">// functions/hello/index.ts</p>
+                            <p class="text-yellow-400">import { serve } from "std/http/server.ts"</p>
+                            <p class="text-yellow-400">serve(async (req) => {</p>
+                            <p class="text-yellow-400">  return new Response(</p>
+                            <p class="text-yellow-400">    JSON.stringify({ message: "Hello!" }),</p>
+                            <p class="text-yellow-400">    { headers: { "Content-Type": "application/json" } }</p>
+                            <p class="text-yellow-400">  )</p>
+                            <p class="text-yellow-400">})</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-purple-600 mb-2">特徴</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• TypeScript/JavaScript対応</li>
+                                <li>• グローバル配信</li>
+                                <li>• 自動スケーリング</li>
+                                <li>• 低レイテンシ</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="concept-box p-6 rounded-lg">
+                    <h3 class="text-xl font-bold mb-4 text-green-600">
+                        <i class="fas fa-elephant mr-2"></i>
+                        Postgres (Supabase DB)
+                    </h3>
+                    <p class="text-gray-700 mb-4">
+                        Supabaseのコアとなるデータベース。PostgreSQLの強力な機能をフルに活用できます。
+                        SaMDに必要なデータ整合性・セキュリティ要件を満たします。
+                    </p>
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-green-600 mb-2">
+                                <i class="fas fa-shield-alt mr-1"></i>セキュリティ
+                            </h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• Row Level Security (RLS)</li>
+                                <li>• 暗号化機能</li>
+                                <li>• 監査ログ</li>
+                                <li>• アクセス制御</li>
+                            </ul>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-blue-600 mb-2">
+                                <i class="fas fa-cogs mr-1"></i>機能
+                            </h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• JSON/JSONB型</li>
+                                <li>• 全文検索</li>
+                                <li>• 拡張機能</li>
+                                <li>• 関数・トリガー</li>
+                            </ul>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-purple-600 mb-2">
+                                <i class="fas fa-chart-line mr-1"></i>運用
+                            </h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 自動バックアップ</li>
+                                <li>• 高可用性</li>
+                                <li>• 監視機能</li>
+                                <li>• スケーリング</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Build & Deploy -->
+        <section id="build-deploy" class="mb-16">
+            <div class="bg-white rounded-lg card-shadow p-8">
+                <h2 class="text-3xl font-bold mb-6 text-center">
+                    <i class="fas fa-rocket mr-3 text-purple-500"></i>
+                    ビルド・デプロイメントの理解
+                </h2>
+
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-blue-600">
+                            <i class="fas fa-hammer mr-2"></i>
+                            ビルド (Build)
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            ソースコードを本番環境で実行可能な形式に変換するプロセス。
+                            コンパイル、最適化、バンドルなどを含みます。
+                        </p>
+                        <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                            <h4 class="font-semibold text-blue-600 mb-2">ビルドプロセス</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• TypeScript → JavaScript変換</li>
+                                <li>• モジュールバンドル</li>
+                                <li>• コード最適化・圧縮</li>
+                                <li>• 静的アセット処理</li>
+                            </ul>
+                        </div>
+                        <div class="code-block p-4 rounded-lg text-sm">
+                            <p class="text-gray-300"># 開発用ビルド（高速）</p>
+                            <p class="text-green-400">npm run dev</p>
+                            <p class="text-gray-300"># 本番用ビルド（最適化）</p>
+                            <p class="text-green-400">npm run build</p>
+                        </div>
+                    </div>
+
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-green-600">
+                            <i class="fas fa-upload mr-2"></i>
+                            デプロイ (Deploy)
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            ビルドされたアプリケーションを本番環境に配置し、
+                            ユーザーがアクセスできる状態にするプロセス。
+                        </p>
+                        <div class="bg-green-50 p-4 rounded-lg mb-4">
+                            <h4 class="font-semibold text-green-600 mb-2">デプロイ対象</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 静的ファイル（HTML/CSS/JS）</li>
+                                <li>• サーバーレス関数</li>
+                                <li>• データベースマイグレーション</li>
+                                <li>• 環境変数設定</li>
+                            </ul>
+                        </div>
+                        <div class="code-block p-4 rounded-lg text-sm">
+                            <p class="text-gray-300"># Vercelデプロイ</p>
+                            <p class="text-green-400">vercel --prod</p>
+                            <p class="text-gray-300"># Supabase関数デプロイ</p>
+                            <p class="text-green-400">supabase functions deploy</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="concept-box p-6 rounded-lg mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-purple-600">
+                        <i class="fas fa-tools mr-2"></i>
+                        Vite: 次世代ビルドツール
+                    </h3>
+                    <p class="text-gray-700 mb-4">
+                        ES modulesを活用した高速なビルドツール。開発時の高速なHMR（Hot Module Replacement）と
+                        本番時の最適化されたビルドを提供します。
+                    </p>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-purple-600 mb-2">開発時の利点</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 高速な起動時間</li>
+                                <li>• インスタントHMR</li>
+                                <li>• TypeScript対応</li>
+                                <li>• 豊富なプラグイン</li>
+                            </ul>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-purple-600 mb-2">本番時の利点</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 効率的なバンドル</li>
+                                <li>• Code Splitting</li>
+                                <li>• Tree Shaking</li>
+                                <li>• 最適化された出力</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-orange-600">
+                            <i class="fas fa-cloud mr-2"></i>
+                            Static Hosting / CDN
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            静的ファイルをグローバルに配信するサービス。
+                            Vercelでは自動的にCDNが設定されます。
+                        </p>
+                        <div class="bg-orange-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-orange-600 mb-2">特徴</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 世界中のエッジサーバー</li>
+                                <li>• 高速なコンテンツ配信</li>
+                                <li>• 自動キャッシュ最適化</li>
+                                <li>• SSL/TLS暗号化</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-teal-600">
+                            <i class="fas fa-server mr-2"></i>
+                            APIサーバー
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            データの処理やビジネスロジックを提供するサーバー。
+                            Supabaseでは自動的にREST APIが生成されます。
+                        </p>
+                        <div class="bg-teal-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-teal-600 mb-2">機能</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 自動生成REST API</li>
+                                <li>• リアルタイム購読</li>
+                                <li>• 認証・認可</li>
+                                <li>• カスタムエンドポイント</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Deployment Flow -->
+        <section id="deployment-flow" class="mb-16">
+            <div class="bg-white rounded-lg card-shadow p-8">
+                <h2 class="text-3xl font-bold mb-6 text-center">
+                    <i class="fas fa-code-branch mr-3 text-indigo-500"></i>
+                    CI/CD・環境管理・デプロイメントフロー
+                </h2>
+
+                <div class="concept-box p-6 rounded-lg mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-indigo-600">
+                        <i class="fas fa-cogs mr-2"></i>
+                        CI/CD (Continuous Integration/Continuous Deployment)
+                    </h3>
+                    <p class="text-gray-700 mb-4">
+                        コードの統合・テスト・デプロイを自動化するプロセス。
+                        SaMD開発では品質保証と規制要件対応のために特に重要です。
+                    </p>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-indigo-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-indigo-600 mb-2">
+                                <i class="fas fa-sync mr-1"></i>CI (継続的インテグレーション)
+                            </h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 自動テスト実行</li>
+                                <li>• コード品質チェック</li>
+                                <li>• セキュリティスキャン</li>
+                                <li>• ビルド確認</li>
+                            </ul>
+                        </div>
+                        <div class="bg-indigo-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-indigo-600 mb-2">
+                                <i class="fas fa-rocket mr-1"></i>CD (継続的デプロイメント)
+                            </h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 自動デプロイ</li>
+                                <li>• 環境間の移行</li>
+                                <li>• ロールバック機能</li>
+                                <li>• デプロイメント監視</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-yellow-600">
+                            <i class="fas fa-flask mr-2"></i>
+                            Staging環境
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            本番環境と同じ構成でテストを行う環境。
+                            SaMDでは薬事申請前の最終検証に使用します。
+                        </p>
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-yellow-600 mb-2">用途</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 統合テスト</li>
+                                <li>• ユーザー受け入れテスト</li>
+                                <li>• パフォーマンステスト</li>
+                                <li>• 最終品質確認</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-red-600">
+                            <i class="fas fa-globe mr-2"></i>
+                            Production本番環境
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            実際に医療従事者が使用する環境。
+                            最高レベルの可用性とセキュリティが要求されます。
+                        </p>
+                        <div class="bg-red-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-red-600 mb-2">要件</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 高可用性（99.9%以上）</li>
+                                <li>• 24/7監視</li>
+                                <li>• 定期バックアップ</li>
+                                <li>• 規制遵守</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-6 rounded-lg mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-gray-700">
+                        <i class="fas fa-sitemap mr-2"></i>
+                        デプロイメントフロー図
+                    </h3>
+                    <div class="flex flex-wrap items-center justify-center space-x-4 space-y-4">
+                        <div class="flex-1 min-w-0 text-center">
+                            <div class="bg-blue-100 p-4 rounded-lg">
+                                <i class="fas fa-code text-2xl text-blue-600 mb-2"></i>
+                                <p class="font-semibold text-blue-800">開発</p>
+                                <p class="text-sm text-blue-600">コード作成</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-arrow-right flow-arrow"></i>
+                        <div class="flex-1 min-w-0 text-center">
+                            <div class="bg-green-100 p-4 rounded-lg">
+                                <i class="fas fa-check-circle text-2xl text-green-600 mb-2"></i>
+                                <p class="font-semibold text-green-800">CI</p>
+                                <p class="text-sm text-green-600">テスト・ビルド</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-arrow-right flow-arrow"></i>
+                        <div class="flex-1 min-w-0 text-center">
+                            <div class="bg-yellow-100 p-4 rounded-lg">
+                                <i class="fas fa-flask text-2xl text-yellow-600 mb-2"></i>
+                                <p class="font-semibold text-yellow-800">Staging</p>
+                                <p class="text-sm text-yellow-600">統合テスト</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-arrow-right flow-arrow"></i>
+                        <div class="flex-1 min-w-0 text-center">
+                            <div class="bg-red-100 p-4 rounded-lg">
+                                <i class="fas fa-globe text-2xl text-red-600 mb-2"></i>
+                                <p class="font-semibold text-red-800">Production</p>
+                                <p class="text-sm text-red-600">本番運用</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-blue-600">
+                            <i class="fas fa-key mr-2"></i>
+                            環境変数
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            環境ごとに異なる設定値を管理する仕組み。
+                            APIキーやデータベース接続情報などを格納します。
+                        </p>
+                        <div class="code-block p-4 rounded-lg text-sm mb-4">
+                            <p class="text-gray-300"># .env.local</p>
+                            <p class="text-yellow-400">SUPABASE_URL=https://xxx.supabase.co</p>
+                            <p class="text-yellow-400">SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiI...</p>
+                            <p class="text-yellow-400">DATABASE_URL=postgresql://...</p>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-blue-600 mb-2">用途</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• API接続情報</li>
+                                <li>• データベース設定</li>
+                                <li>• 機能フラグ</li>
+                                <li>• 外部サービス連携</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="concept-box p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-orange-600">
+                            <i class="fas fa-undo mr-2"></i>
+                            ロールバック
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            問題が発生した際に以前の安定したバージョンに戻すプロセス。
+                            SaMDでは迅速な復旧が患者安全に直結します。
+                        </p>
+                        <div class="bg-orange-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-orange-600 mb-2">実行方法</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• Git履歴からのロールバック</li>
+                                <li>• コンテナイメージの切り戻し</li>
+                                <li>• データベースの復元</li>
+                                <li>• 設定の巻き戻し</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Practical Workflow -->
+        <section class="mb-16">
+            <div class="bg-white rounded-lg card-shadow p-8">
+                <h2 class="text-3xl font-bold mb-6 text-center">
+                    <i class="fas fa-workflow mr-3 text-purple-500"></i>
+                    実践的な開発・デプロイワークフロー
+                </h2>
+
+                <div class="success-box p-6 rounded-lg mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-green-600">
+                        <i class="fas fa-play-circle mr-2"></i>
+                        日常的な開発フロー
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-green-600 mb-3">1. ローカル開発環境の起動</h4>
+                            <div class="code-block p-3 rounded text-sm mb-4">
+                                <p class="text-gray-300"># Supabaseローカル環境起動</p>
+                                <p class="text-green-400">supabase start</p>
+                                <p class="text-gray-300"># フロントエンド開発サーバー起動</p>
+                                <p class="text-green-400">npm run dev</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-green-600 mb-3">2. 開発・テスト</h4>
+                            <div class="code-block p-3 rounded text-sm mb-4">
+                                <p class="text-gray-300"># テスト実行</p>
+                                <p class="text-green-400">npm test</p>
+                                <p class="text-gray-300"># 型チェック</p>
+                                <p class="text-green-400">npm run type-check</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="concept-box p-6 rounded-lg mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-indigo-600">
+                        <i class="fas fa-upload mr-2"></i>
+                        デプロイメント手順
+                    </h3>
+                    <div class="space-y-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="bg-indigo-100 text-indigo-600 rounded-full w-8 h-8 flex items-center justify-center font-bold">1</div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-indigo-600 mb-2">コードのコミット・プッシュ</h4>
+                                <div class="code-block p-3 rounded text-sm">
+                                    <p class="text-green-400">git add .</p>
+                                    <p class="text-green-400">git commit -m "feat: add patient data validation"</p>
+                                    <p class="text-green-400">git push origin main</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-4">
+                            <div class="bg-indigo-100 text-indigo-600 rounded-full w-8 h-8 flex items-center justify-center font-bold">2</div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-indigo-600 mb-2">Vercel自動デプロイ</h4>
+                                <p class="text-gray-700 text-sm">GitHubプッシュをトリガーにVercelが自動的にビルド・デプロイを実行</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-4">
+                            <div class="bg-indigo-100 text-indigo-600 rounded-full w-8 h-8 flex items-center justify-center font-bold">3</div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-indigo-600 mb-2">Supabase関数デプロイ</h4>
+                                <div class="code-block p-3 rounded text-sm">
+                                    <p class="text-green-400">supabase functions deploy --project-ref your-project-ref</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-4">
+                            <div class="bg-indigo-100 text-indigo-600 rounded-full w-8 h-8 flex items-center justify-center font-bold">4</div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-indigo-600 mb-2">本番環境での動作確認</h4>
+                                <p class="text-gray-700 text-sm">デプロイ後の機能テスト・パフォーマンス確認</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-box p-6 rounded-lg">
+                    <h3 class="text-xl font-bold mb-4 text-yellow-600">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        SaMD開発での注意点
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-yellow-600 mb-2">品質管理</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 全機能の自動テスト必須</li>
+                                <li>• コードレビューの徹底</li>
+                                <li>• 変更履歴の詳細記録</li>
+                                <li>• リスク評価の実施</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-yellow-600 mb-2">規制対応</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• 薬機法への適合確認</li>
+                                <li>• 臨床評価の実施</li>
+                                <li>• 市販後監視体制</li>
+                                <li>• 定期的な安全性レビュー</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Glossary -->
+        <section id="glossary" class="mb-16">
+            <div class="bg-white rounded-lg card-shadow p-8">
+                <h2 class="text-3xl font-bold mb-6 text-center">
+                    <i class="fas fa-book mr-3 text-indigo-500"></i>
+                    用語集
+                </h2>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <h3 class="font-bold text-blue-600">フロントエンド (Frontend)</h3>
+                            <p class="text-sm text-gray-600">ユーザーが直接操作するWebアプリケーションの部分。ブラウザで動作するUI/UX。</p>
+                        </div>
+
+                        <div class="border-l-4 border-green-500 pl-4">
+                            <h3 class="font-bold text-green-600">バックエンド (Backend)</h3>
+                            <p class="text-sm text-gray-600">サーバーサイドの処理を担当。データベース、API、ビジネスロジックを含む。</p>
+                        </div>
+
+                        <div class="border-l-4 border-purple-500 pl-4">
+                            <h3 class="font-bold text-purple-600">Vite</h3>
+                            <p class="text-sm text-gray-600">次世代のフロントエンドビルドツール。高速な開発サーバーと最適化されたビルドを提供。</p>
+                        </div>
+
+                        <div class="border-l-4 border-green-500 pl-4">
+                            <h3 class="font-bold text-green-600">Supabase</h3>
+                            <p class="text-sm text-gray-600">オープンソースのBaaS。PostgreSQL、認証、リアルタイム機能を統合提供。</p>
+                        </div>
+
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <h3 class="font-bold text-blue-600">Supabase CLI</h3>
+                            <p class="text-sm text-gray-600">Supabaseプロジェクトの開発・管理を行うコマンドラインツール。</p>
+                        </div>
+
+                        <div class="border-l-4 border-purple-500 pl-4">
+                            <h3 class="font-bold text-purple-600">Supabase Edge Functions</h3>
+                            <p class="text-sm text-gray-600">Deno上で動作するサーバーレス関数。カスタムAPIエンドポイントを作成可能。</p>
+                        </div>
+
+                        <div class="border-l-4 border-green-500 pl-4">
+                            <h3 class="font-bold text-green-600">PostgreSQL</h3>
+                            <p class="text-sm text-gray-600">Supabaseで使用される高機能なオープンソースリレーショナルデータベース。</p>
+                        </div>
+
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <h3 class="font-bold text-blue-600">Docker</h3>
+                            <p class="text-sm text-gray-600">アプリケーションをコンテナ化する技術。環境の一貫性と移植性を提供。</p>
+                        </div>
+
+                        <div class="border-l-4 border-purple-500 pl-4">
+                            <h3 class="font-bold text-purple-600">Dockerfile</h3>
+                            <p class="text-sm text-gray-600">Dockerイメージの構築手順を記述したテキストファイル。</p>
+                        </div>
+
+                        <div class="border-l-4 border-green-500 pl-4">
+                            <h3 class="font-bold text-green-600">Dockerイメージ</h3>
+                            <p class="text-sm text-gray-600">アプリケーションとその実行環境を含む読み取り専用のテンプレート。</p>
+                        </div>
+
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <h3 class="font-bold text-blue-600">Dockerコンテナ</h3>
+                            <p class="text-sm text-gray-600">Dockerイメージから作成される実行中のプロセス。軽量な仮想化環境。</p>
+                        </div>
+
+                        <div class="border-l-4 border-purple-500 pl-4">
+                            <h3 class="font-bold text-purple-600">Docker Compose</h3>
+                            <p class="text-sm text-gray-600">複数のコンテナを組み合わせたアプリケーションを定義・実行するツール。</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="border-l-4 border-orange-500 pl-4">
+                            <h3 class="font-bold text-orange-600">OCIイメージ</h3>
+                            <p class="text-sm text-gray-600">Open Container Initiative準拠のコンテナイメージ標準。</p>
+                        </div>
+
+                        <div class="border-l-4 border-teal-500 pl-4">
+                            <h3 class="font-bold text-teal-600">Container Registry</h3>
+                            <p class="text-sm text-gray-600">Dockerイメージを保存・配布するためのサービス。</p>
+                        </div>
+
+                        <div class="border-l-4 border-indigo-500 pl-4">
+                            <h3 class="font-bold text-indigo-600">CI/CD</h3>
+                            <p class="text-sm text-gray-600">継続的インテグレーション・継続的デプロイメント。開発プロセスの自動化。</p>
+                        </div>
+
+                        <div class="border-l-4 border-yellow-500 pl-4">
+                            <h3 class="font-bold text-yellow-600">Staging環境</h3>
+                            <p class="text-sm text-gray-600">本番環境と同等の構成でテストを行う環境。</p>
+                        </div>
+
+                        <div class="border-l-4 border-red-500 pl-4">
+                            <h3 class="font-bold text-red-600">Production本番環境</h3>
+                            <p class="text-sm text-gray-600">実際にユーザーが使用する本番運用環境。</p>
+                        </div>
+
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <h3 class="font-bold text-blue-600">ビルド (Build)</h3>
+                            <p class="text-sm text-gray-600">ソースコードを実行可能な形式に変換するプロセス。</p>
+                        </div>
+
+                        <div class="border-l-4 border-green-500 pl-4">
+                            <h3 class="font-bold text-green-600">デプロイ (Deploy)</h3>
+                            <p class="text-sm text-gray-600">アプリケーションを本番環境に配置するプロセス。</p>
+                        </div>
+
+                        <div class="border-l-4 border-purple-500 pl-4">
+                            <h3 class="font-bold text-purple-600">npm run dev / npm run build</h3>
+                            <p class="text-sm text-gray-600">開発サーバー起動 / 本番用ビルドを実行するnpmスクリプト。</p>
+                        </div>
+
+                        <div class="border-l-4 border-green-500 pl-4">
+                            <h3 class="font-bold text-green-600">supabase start</h3>
+                            <p class="text-sm text-gray-600">Supabaseローカル開発環境を起動するCLIコマンド。</p>
+                        </div>
+
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <h3 class="font-bold text-blue-600">supabase functions deploy</h3>
+                            <p class="text-sm text-gray-600">Edge Functionsを本番環境にデプロイするCLIコマンド。</p>
+                        </div>
+
+                        <div class="border-l-4 border-orange-500 pl-4">
+                            <h3 class="font-bold text-orange-600">Static Hosting / CDN</h3>
+                            <p class="text-sm text-gray-600">静的ファイルをグローバルに高速配信するサービス。</p>
+                        </div>
+
+                        <div class="border-l-4 border-teal-500 pl-4">
+                            <h3 class="font-bold text-teal-600">APIサーバー</h3>
+                            <p class="text-sm text-gray-600">データの処理やビジネスロジックを提供するサーバー。</p>
+                        </div>
+
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <h3 class="font-bold text-blue-600">環境変数</h3>
+                            <p class="text-sm text-gray-600">環境ごとに異なる設定値を管理する仕組み。</p>
+                        </div>
+
+                        <div class="border-l-4 border-orange-500 pl-4">
+                            <h3 class="font-bold text-orange-600">ロールバック</h3>
+                            <p class="text-sm text-gray-600">問題発生時に以前の安定したバージョンに戻すプロセス。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conclusion -->
+        <section class="mb-16">
+            <div class="gradient-bg text-white rounded-lg p-8 text-center">
+                <h2 class="text-3xl font-bold mb-4">
+                    <i class="fas fa-graduation-cap mr-3"></i>
+                    まとめ
+                </h2>
+                <p class="text-xl opacity-90 mb-6 max-w-4xl mx-auto">
+                    本ガイドでは、SaMD開発における現代的なインフラストラクチャの全体像を包括的に解説しました。
+                    Vercel、Docker、Supabaseの組み合わせにより、高品質で規制要件に対応した医療機器ソフトウェアの
+                    開発・運用が可能になります。
+                </p>
+                <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                    <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                        <i class="fas fa-shield-alt text-3xl mb-2"></i>
+                        <h3 class="font-bold mb-2">安全性</h3>
+                        <p class="text-sm opacity-80">患者データの保護と医療安全の確保</p>
+                    </div>
+                    <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                        <i class="fas fa-tachometer-alt text-3xl mb-2"></i>
+                        <h3 class="font-bold mb-2">効率性</h3>
+                        <p class="text-sm opacity-80">CI/CDによる開発・デプロイメントの自動化</p>
+                    </div>
+                    <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                        <i class="fas fa-expand-arrows-alt text-3xl mb-2"></i>
+                        <h3 class="font-bold mb-2">拡張性</h3>
+                        <p class="text-sm opacity-80">成長に合わせたシステムスケーリング</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Architecture Chart
+        const ctx = document.getElementById('architectureChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['フロントエンド (Vercel)', 'バックエンド (Supabase)', 'コンテナ (Docker)', 'インフラ・監視'],
+                datasets: [{
+                    data: [30, 35, 25, 10],
+                    backgroundColor: [
+                        '#3B82F6',
+                        '#10B981',
+                        '#8B5CF6',
+                        '#F59E0B'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 14
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'SaMDシステム構成要素',
+                        font: {
+                            size: 18,
+                            weight: 'bold'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

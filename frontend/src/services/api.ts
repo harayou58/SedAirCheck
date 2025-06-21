@@ -1,15 +1,25 @@
 import axios from 'axios';
 import { AnalysisResult, ApiResponse } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD ? '/api' : 'http://localhost:3001/api');
+const API_BASE_URL = import.meta.env.VITE_API_URL || (
+  import.meta.env.PROD 
+    ? '/api'  // Vercel production - serverless functions
+    : 'http://localhost:3001/api'  // Local development - Express server
+);
+
+console.log('🔧 API Configuration:', {
+  VITE_API_URL: import.meta.env.VITE_API_URL,
+  PROD: import.meta.env.PROD,
+  windowOrigin: typeof window !== 'undefined' ? window.location.origin : 'undefined',
+  finalAPIURL: API_BASE_URL
+});
 
 // Axiosインスタンスを作成
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 60000, // 60秒（画像解析には時間がかかる場合がある）
   headers: {
-    'Content-Type': 'multipart/form-data',
+    'Content-Type': 'application/json',
   },
 });
 
@@ -44,7 +54,11 @@ export const analysisAPI = {
       fileType: file.type
     });
 
-    const response = await apiClient.post<ApiResponse<AnalysisResult>>('/analyze', formData);
+    const response = await apiClient.post<ApiResponse<AnalysisResult>>('/analyze', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
 
     if (!response.data.success || !response.data.data) {
       throw new Error(response.data.error || '解析に失敗しました');
@@ -56,7 +70,7 @@ export const analysisAPI = {
   // ヘルスチェック
   healthCheck: async (): Promise<boolean> => {
     try {
-      const response = await axios.get(`${API_BASE_URL.replace('/api', '')}/health`);
+      const response = await apiClient.get('/health');
       return response.status === 200;
     } catch (error) {
       return false;

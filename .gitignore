@@ -100,3 +100,4 @@ test-images/
 
 # API keys and sensitive data
 .env.production
+.vercel
