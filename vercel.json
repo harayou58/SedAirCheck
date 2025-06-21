@@ -6,6 +6,7 @@
       "runtime": "@vercel/node@3.0.12"
     }
   },
+  "public": true,
   "headers": [
     {
       "source": "/api/(.*)",
